@@ -1,0 +1,28 @@
+body
+{
+    background-color: lightsteelblue;
+    font-family: monospace;
+    font-size: 125%;
+}
+
+.personal-Info
+{
+    width: 20vw;
+    border: 2px solid black;
+    padding: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+}
+
+.additional-Info
+{
+    width: 75vw;
+    padding: 10px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom:0;
+    overflow: auto;
+}
