@@ -1,0 +1,291 @@
+<!-- TO DO: Masteries[rank], Runes totals -->
+<!------------------------------Required Field-------------------------------->
+<!DOCTYPE html>
+<!---------------------------------------------------------------------------->
+<!---------------------------------User Input--------------------------------->
+<body style="background-color:powderblue;">
+
+    <h1>Summoner Information Lookup</h1>
+
+    <p>Select Region</p>
+    <select id="region">
+        <option value="BR">BR</option>
+        <option value="EUNE">EUNE</option>
+        <option value="EUW">EUW</option>
+        <option value="KR">KR</option>
+        <option value="LAN">LAN</option>
+        <option value="LAS">LAS</option>
+        <option value="NA" selected="selected">NA</option>
+        <option value="OCE">OCE</option>
+        <option value="RU">RU</option>
+        <option value="TR">TR</option>
+    </select>
+
+    <p>Input Summoner Name:</p>
+    <input id="userName" />
+    <input type="submit" onclick="updateWebPage(1)" />
+    <br />
+    <!---------------------------------------------------------------------------->
+    <!-------------------------------Webpage Output------------------------------->
+    <h2 id="SummonerInfo" style="visibility:hidden"></h2>
+    <p id="sName" style="visibility:hidden"></p>
+    <p id="sID" style="visibility:hidden"></p>
+    <p id="sLevel" style="visibility:hidden"></p>
+    <br />
+
+    <p id="noSummonerFound"></p>
+
+    <h2 id="Masteries" style="visibility:hidden"></h2>
+    <select id="masteries" style="visibility:hidden" onchange="updateWebPage(2)"></select>
+    <p id="masteriesOutput" style="visibility:hidden"></p>
+    <br />
+
+    <h2 id="Runes" style="visibility:hidden"></h2>
+    <select id="runes" style="visibility:hidden" onchange="updateWebPage(3)"></select>
+    <p id="runesOutput" style="visibility:hidden"></p>
+    <br />
+
+    <nav style="position: fixed; bottom: 0; left: 690px; text-align: center">
+        <a href="C:\Users\Korey\Desktop\Programs\League Website\League Project\Web1.html">Web1</a> |
+        <a href="C:\Users\Korey\Desktop\Programs\League Website\League Project\Web2.html">Web2</a> |
+        <a href="C:\Users\Korey\Desktop\Programs\League Website\League Project\Web3.html">Web3</a>
+    </nav>
+
+</body>
+<!---------------------------------------------------------------------------->
+<!--------------------------------JavaScript---------------------------------->
+<script>
+    //-----------------------------Global Variables--------------------------------
+    var globalID = -1;
+    var globalRegion;
+    var API_KEY = "0d64fd76-4740-4412-a08f-71a124c1ab95";
+    var xhttp = new XMLHttpRequest();
+    var basicData;
+    var masteryData;
+    var runeData;
+    //-----------------------------------------------------------------------------
+
+    //---------------------------------On Enter------------------------------------
+    document.getElementById('userName').addEventListener('keypress',
+        function (event) {
+            if (event.keyCode == 13) {
+                updateWebPage(1);
+            }
+        });
+    //-----------------------------------------------------------------------------
+
+    //------------------------------Main Driver------------------------------------
+    function updateWebPage(method) {
+        if (method == 1) {
+            getSummonerInfo();
+
+            if (globalID != -1) {
+                getMasteries();
+                getRunes();
+            }
+        }
+
+        else if (method == 2) {
+            updateMasteries();
+        }
+
+        else if (method == 3) {
+            updateRunes();
+        }
+    }
+    //-----------------------------------------------------------------------------
+
+    //------------------------------Basic Info-------------------------------------
+    function getSummonerInfo() {
+        if (document.getElementById("userName").value != "") {
+            var region1 = document.getElementById("region");
+            var region2 = region1.options[region1.selectedIndex].value;
+            region2 = region2.toLowerCase().trim();
+            globalRegion = region2;
+            var name = document.getElementById("userName").value;
+            var url = "https://" + region2 + ".api.pvp.net/api/lol/" + region2
+                    + "/v1.4/summoner/by-name/" + name + "?api_key=" + API_KEY;
+
+
+            xhttp.open("GET", url, false);
+            xhttp.send();
+
+            var data = JSON.parse(xhttp.responseText);
+
+            if (xhttp.status != 404) {
+                basicData = data;
+
+                name = name.replace(" ", "");
+                name = name.toLowerCase().trim();
+
+                document.getElementById("SummonerInfo").style.visibility = "visible";
+                document.getElementById("sName").style.visibility = "visible";
+                document.getElementById("sID").style.visibility = "visible";
+                document.getElementById("sLevel").style.visibility = "visible";
+
+                document.getElementById("SummonerInfo").innerHTML = "Basic Summoner Info";
+                document.getElementById("sName").innerHTML = "Summoner Name: " + data[name].name;
+                document.getElementById("sLevel").innerHTML
+                    = "Summoner Level: " + data[name].summonerLevel;
+                document.getElementById("sID").innerHTML = "Summoner ID: " + data[name].id;
+                globalID = data[name].id;
+                document.getElementById("noSummonerFound").innerHTML = "";
+            }
+
+            else {
+                globalID = -1;
+
+                document.getElementById("SummonerInfo").innerHTML = "";
+                document.getElementById("sName").innerHTML = "";
+                document.getElementById("sLevel").innerHTML = "";
+                document.getElementById("sID").innerHTML = "";
+                document.getElementById("masteries").innerHTML = "";
+                document.getElementById("Masteries").innerHTML = "";
+                document.getElementById("Runes").innerHTML = "";
+                document.getElementById("runes").innerHTML = "";
+
+                document.getElementById("SummonerInfo").visibility = "hidden";
+                document.getElementById("sName").style.visibility = "hidden";
+                document.getElementById("sID").style.visibility = "hidden";
+                document.getElementById("sLevel").style.visibility = "hidden";
+                document.getElementById("Masteries").style.visibility = "hidden";
+                document.getElementById("masteries").style.visibility = "hidden";
+                document.getElementById("Runes").style.visibility = "hidden";
+                document.getElementById("runes").style.visibility = "hidden";
+
+                document.getElementById("noSummonerFound").innerHTML
+                    = "<b>No summoner data found...</b>";
+            }
+        }
+    }
+    //-----------------------------------------------------------------------------
+
+    //---------------------------------Masteries-----------------------------------
+    function getMasteries() {
+        var url = "https://" + globalRegion + ".api.pvp.net/api/lol/" + globalRegion
+            + "/v1.4/summoner/" + globalID + "/masteries" + "?api_key="
+            + API_KEY;
+
+        xhttp.open("GET", url, false);
+        xhttp.send();
+
+        document.getElementById("Masteries").innerHTML = "Masteries"
+        document.getElementById("Masteries").style.visibility = "visible";
+        document.getElementById("masteries").style.visibility = "visible";
+
+        var data = JSON.parse(xhttp.responseText);
+
+        masteryData = data;
+
+        document.getElementById("masteries").innerHTML = "";
+
+        for (var i = 0; i < data[globalID].pages.length; i++) {
+            document.getElementById("masteries").innerHTML
+                = document.getElementById("masteries").innerHTML
+                + '<option value="' + i
+                + '">' + data[globalID].pages[i].name + '</option>';
+        }
+
+        updateMasteries();
+    }
+
+    function updateMasteries()
+    {
+        var data = masteryData;
+
+        var masteryPageChoice = document.getElementById("masteries");
+        var mpc = masteryPageChoice.options[masteryPageChoice.selectedIndex].value;
+
+        document.getElementById("masteriesOutput").style.visibility = "visible";
+        document.getElementById("masteriesOutput").innerHTML = "";
+
+        if (data[globalID].pages[mpc].masteries != null) {
+            for (var k = 0; k < data[globalID].pages[mpc].masteries.length; k++) {
+                var url = "https://global.api.pvp.net/api/lol/static-data/" + globalRegion
+                + "/v1.2/mastery/" + data[globalID].pages[mpc].masteries[k].id + "?api_key="
+                + API_KEY;
+
+                xhttp.open("GET", url, false);
+                xhttp.send();
+
+                var data2 = JSON.parse(xhttp.responseText);
+
+                document.getElementById("masteriesOutput").innerHTML =
+                    document.getElementById("masteriesOutput").innerHTML
+                    + data2.name + ": Rank " + data[globalID].pages[mpc].masteries[k].rank
+                    + "<br />" + data2.description + " "
+                    + "<br />" + "<br />";
+            }
+        }
+
+        else
+        {
+            document.getElementById("masteriesOutput").innerHTML = "Empty Mastery Page...";
+        }
+    }
+    //-----------------------------------------------------------------------------
+
+    //---------------------------------Runes---------------------------------------
+    function getRunes() {
+        var url = "https://" + globalRegion + ".api.pvp.net/api/lol/" + globalRegion
+                + "/v1.4/summoner/" + globalID + "/runes" + "?api_key="
+                + API_KEY;
+
+        xhttp.open("GET", url, false);
+        xhttp.send();
+
+        document.getElementById("Runes").innerHTML = "Runes"
+        document.getElementById("Runes").style.visibility = "visible";
+        document.getElementById("runes").style.visibility = "visible";
+
+        var data = JSON.parse(xhttp.responseText);
+
+        runeData = data;
+
+        document.getElementById("runes").innerHTML = "";
+
+        for (var i = 0; i < data[globalID].pages.length; i++) {
+            document.getElementById("runes").innerHTML
+                = document.getElementById("runes").innerHTML
+                + '<option value="' + i
+                + '">' + data[globalID].pages[i].name + '</option>';
+        }
+
+        updateRunes();
+    }
+
+        function updateRunes()
+        {
+            var data = runeData;
+
+            var runePageChoice = document.getElementById("runes");
+            var rpc = runePageChoice.options[runePageChoice.selectedIndex].value;
+
+            document.getElementById("runesOutput").style.visibility = "visible";
+            document.getElementById("runesOutput").innerHTML = "";
+
+            if (data[globalID].pages[rpc].slots != null) {
+                for (var k = 0; k < data[globalID].pages[rpc].slots.length; k++) {
+                    var url = "https://global.api.pvp.net/api/lol/static-data/" + globalRegion
+                + "/v1.2/rune/" + data[globalID].pages[rpc].slots[k].runeId + "?api_key="
+                + API_KEY;
+
+                    xhttp.open("GET", url, false);
+                    xhttp.send();
+
+                    var data2 = JSON.parse(xhttp.responseText);
+
+                    document.getElementById("runesOutput").innerHTML =
+                        document.getElementById("runesOutput").innerHTML + "Slot #" +
+                        +data[globalID].pages[rpc].slots[k].runeSlotId + ":   "
+                        + data2.name + " = " + data2.description + "<br />";
+                }
+            }
+
+            else {
+                document.getElementById("runesOutput").innerHTML = "Empty Rune Page...";
+            }
+        }
+
+    //-----------------------------------------------------------------------------
+</script>

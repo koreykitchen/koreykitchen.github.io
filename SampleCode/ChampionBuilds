@@ -1,0 +1,493 @@
+﻿<!-------------------------------------------Required Field--------------------------------------->
+<!DOCTYPE html>
+<!------------------------------------------------------------------------------------------------>
+<!-------------------------------------------Initialization--------------------------------------->
+<body onload="getData()" style="background-color: #ff5e5e">
+    <h1>Champion Builds</h1>
+    <!-------------------------------------------------------------------------------------------->
+    <!----------------------------------------Champ Select---------------------------------------->
+    <div style="position: fixed; top: 75px;">
+        <h2>Champ Select</h2>
+        <input list="champList" id="champList2">
+        <datalist id="champList"></datalist>
+        <input type="button" value="Select Champ" onclick="selectChamp()">
+        <br /> <br />
+        <h3 style="visibility:hidden; display:inline" id="lvlSelect">Select Level: </h3>
+        <select style="visibility:hidden; display:inline" id="selectLvl" onchange="updateChamp()">
+            <option value="1" selected="selected">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+            <option value="16">16</option>
+            <option value="17">17</option>
+            <option value="18">18</option>
+        </select>
+        <br />
+
+        <h3 id="champTitle" style="visibility:hidden"></h3>
+        <p id="champDisplay"></p>
+        <p id="champError"></p>
+    </div>
+    <!-------------------------------------------------------------------------------------------->
+    <!-----------------------------------------Item Select---------------------------------------->
+    <div id="itemDiv" style="position: fixed; top: 75px; left: 400px; visibility:hidden">
+        <h2>Item Select</h2>
+
+        <input list="itemList" id="itemList2">
+        <datalist id="itemList"></datalist>
+        <input type="button" value="Add Item" onclick="addItem()">
+        <input type="button" value="Remove Item" onclick="removeItem()">
+        <input type="button" value="Remove All" onclick="removeAll()">
+        <br />
+        <h3>Equipped Items:</h3>
+        <p id="itemDisplay"></p>
+        <br />
+        <p id="totalGoldTag"><b>Total Gold Cost: </b>0</p>
+        <br />
+        <p id="itemError"></p>
+    </div>
+    <!-------------------------------------------------------------------------------------------->
+    <!------------------------------------Total Statistics Output--------------------------------->
+    <div id="totalDiv" style="position: fixed; top: 75px; left: 1000px; visibility:hidden">
+        <h2>Totals</h2>
+        <p id="totalsDisplay">No Totals Calculated Yet...</p>
+    </div>
+    <!-------------------------------------------------------------------------------------------->
+
+    <p id="debug"></p>
+    <!---------------------------------------------Links------------------------------------------>
+    <nav style="position: fixed; bottom: 0; left: 690px; text-align: center">
+        <a href="C:\Users\Korey\Desktop\Programs\League Website\League Project\Web1.html">Web1</a> |
+        <a href="C:\Users\Korey\Desktop\Programs\League Website\League Project\Web2.html">Web2</a> |
+        <a href="C:\Users\Korey\Desktop\Programs\League Website\League Project\Web3.html">Web3</a>
+    </nav>
+    <!-------------------------------------------------------------------------------------------->
+</body>
+<!------------------------------------------------------------------------------------------------>
+<!----------------------------------------------Javascript---------------------------------------->
+<script>
+    //TO DO:
+
+
+    //----------------------------------------Global Variables-------------------------------------
+    var champs;
+    var items;
+    var xhttp = new XMLHttpRequest();
+    var API_KEY = "0d64fd76-4740-4412-a08f-71a124c1ab95";
+    var equippedItems = [null,null,null,null,null,null];
+    var numItemsEq = 0;
+    var totalGold = 0;
+    var itemMap = new Map();
+    var champObject =
+        {
+            Armor: 0,
+            ArmorPerLevel: 0,
+            AttackDamage: 0,
+            AttackDamagePerLevel: 0,
+            AttackRange: 0,
+            AttackSpeed: 0,
+            AttackSpeedPerLevel: 0,
+            Crit: 0,
+            CritPerLevel: 0,
+            Hp: 0,
+            HpPerLevel: 0,
+            HpRegen: 0,
+            HpRegenPerLevel: 0,
+            MovementSpeed: 0,
+            Mana: 0,
+            ManaPerLevel: 0,
+            ManaRegen:0,
+            ManaRegenPerLevel: 0,
+            MagicResist: 0,
+            MagicResistPerLevel: 0,
+            previousLevel : 1
+        };
+    var totalObject =
+        {
+            Armor: 0,
+            ArmorPerLevel: 0,
+            AttackDamage: 0,
+            AttackDamagePerLevel: 0,
+            AttackRange: 0,
+            AttackSpeed: 0,
+            AttackSpeedPerLevel: 0,
+            Crit: 0,
+            CritPerLevel: 0,
+            Hp: 0,
+            HpPerLevel: 0,
+            HpRegen: 0,
+            HpRegenPerLevel: 0,
+            MovementSpeed: 0,
+            Mana: 0,
+            ManaPerLevel: 0,
+            ManaRegen: 0,
+            ManaRegenPerLevel: 0,
+            MagicResist: 0,
+            MagicResistPerLevel: 0,
+            AbilityPower: 0
+        };
+    //---------------------------------------------------------------------------------------------
+
+    //----------------------------------------Get Static Data--------------------------------------
+    function getData()
+    {
+        var url = "https://na.api.pvp.net/api/lol/static-data/na/v1.2/champion"
+            + "?champData=all&api_key=" + API_KEY;
+
+        xhttp.open("GET", url, false);
+        xhttp.send();
+
+        champs = JSON.parse(xhttp.responseText);
+
+        for(var champ in champs.data)
+        {
+            document.getElementById("champList").innerHTML
+                = document.getElementById("champList").innerHTML
+                + '<option value="' + champs.data[champ].name + '">';
+        }
+
+        var url = "https://na.api.pvp.net/api/lol/static-data/na/v1.2/item"
+            + "?itemListData=gold,stats&api_key=" + API_KEY;
+
+        xhttp.open("GET", url, false);
+        xhttp.send();
+
+        items = JSON.parse(xhttp.responseText);
+
+        for (var item in items.data) {
+            document.getElementById("itemList").innerHTML
+                = document.getElementById("itemList").innerHTML
+                + '<option value="' + items.data[item].name + '">';
+
+            itemMap[items.data[item].name] = items.data[item].id;
+        }
+    }
+    //---------------------------------------------------------------------------------------------
+
+    //-----------------------------------------Champ Select----------------------------------------
+    function selectChamp()
+    {
+        if (document.getElementById("champList2").value != "")
+        {
+            var champ = document.getElementById("champList2").value;
+            champ = champ.replace(" ", "");
+            champ = champ.trim();
+            selectedChamp = champs.data[champ];
+
+            if (selectedChamp != null && selectedChamp != undefined)
+            {
+                document.getElementById("champTitle").style.visibility = "visible";
+                document.getElementById("champTitle").innerHTML
+                    = document.getElementById("champList2").value + " Base Stats";
+
+                document.getElementById("champError").innerHTML = "";
+                document.getElementById("champDisplay").innerHTML = "";
+
+                champObject.Armor = selectedChamp.stats.armor;
+                champObject.ArmorPerLevel = selectedChamp.stats.armorperlevel;
+                champObject.AttackDamage = selectedChamp.stats.attackdamage;
+                champObject.AttackDamagePerLevel = selectedChamp.stats.attackdamageperlevel;
+                champObject.AttackRange = selectedChamp.stats.attackrange;
+                champObject.AttackSpeed = selectedChamp.stats.attackspeedoffset;
+                champObject.AttackSpeedPerLevel = selectedChamp.stats.attackspeedperlevel;
+                champObject.Crit = selectedChamp.stats.crit;
+                champObject.CritPerLevel = selectedChamp.stats.critperlevel;
+                champObject.Hp = selectedChamp.stats.hp;
+                champObject.HpPerLevel = selectedChamp.stats.hpperlevel;
+                champObject.HpRegen = selectedChamp.stats.hpregen;
+                champObject.HpRegenPerLevel = selectedChamp.stats.hpregenperlevel;
+                champObject.MovementSpeed = selectedChamp.stats.movespeed;
+                champObject.Mana = selectedChamp.stats.mp;
+                champObject.ManaPerLevel = selectedChamp.stats.mpperlevel;
+                champObject.ManaRegen = selectedChamp.stats.mpregen;
+                champObject.ManaRegenPerLevel = selectedChamp.stats.mpregenperlevel;
+                champObject.MagicResist = selectedChamp.stats.spellblock;
+                champObject.MagicResistPerLevel = selectedChamp.stats.spellblockperlevel;
+
+                champObject.previousLevel = 1;
+
+                updateChamp();
+
+                document.getElementById("itemDiv").style.visibility = "visible";
+                document.getElementById("totalDiv").style.visibility = "visible";
+                document.getElementById("selectLvl").style.visibility = "visible";
+                document.getElementById("lvlSelect").style.visibility = "visible";
+
+                updateTotals();
+            }
+
+            else
+            {
+                document.getElementById("champError").innerHTML = "<b>Please enter a valid champ name...</b>";
+                document.getElementById("champDisplay").innerHTML = "";
+                document.getElementById("champTitle").style.visibility = "hidden";
+                document.getElementById("itemDiv").style.visibility = "hidden";
+                document.getElementById("totalDiv").style.visibility = "hidden";
+                document.getElementById("selectLvl").style.visibility = "hidden";
+                document.getElementById("lvlSelect").style.visibility = "hidden";
+            }
+        }
+    }
+    //---------------------------------------------------------------------------------------------
+    //-------------------------------------------Update Champ--------------------------------------
+    function updateChamp()
+    {
+        var inputLvl1 = document.getElementById("selectLvl");
+        var inputLvl2 = inputLvl1.options[inputLvl1.selectedIndex].value;
+
+        var changeLvl = inputLvl2 - champObject.previousLevel;
+
+        champObject.Armor = champObject.Armor + (changeLvl * champObject.ArmorPerLevel);
+        champObject.AttackDamage = champObject.AttackDamage + (changeLvl * champObject.AttackDamagePerLevel);
+        champObject.AttackSpeed = champObject.AttackSpeed + (changeLvl * champObject.AttackSpeedPerLevel);
+        champObject.Crit = champObject.Crit + (changeLvl * champObject.CritPerLevel);
+        champObject.Hp = champObject.Hp + (changeLvl * champObject.HpPerLevel);
+        champObject.HpRegen = champObject.HpRegen + (changeLvl * champObject.HpRegenPerLevel);
+        champObject.Mana = champObject.Mana + (changeLvl * champObject.ManaPerLevel);
+        champObject.ManaRegen = champObject.ManaRegen + (changeLvl * champObject.ManaRegenPerLevel);
+        champObject.MagicResist = champObject.MagicResist + (changeLvl * champObject.MagicResistPerLevel);
+
+        champObject.previousLevel = inputLvl2;
+
+        champObject.Armor = Number((champObject.Armor).toFixed(3));
+        champObject.AttackDamage = Number((champObject.AttackDamage).toFixed(3));
+        champObject.AttackSpeed = Number((champObject.AttackSpeed).toFixed(3));
+        champObject.Crit = Number((champObject.Crit).toFixed(3));
+        champObject.Hp = Number((champObject.Hp).toFixed(3));
+        champObject.HpRegen = Number((champObject.HpRegen).toFixed(3));
+        champObject.Mana = Number((champObject.Mana).toFixed(3));
+        champObject.ManaRegen = Number((champObject.ManaRegen).toFixed(3));
+        champObject.MagicResist = Number((champObject.MagicResist).toFixed(3));
+
+        document.getElementById("champDisplay").innerHTML =
+                    "<b>Armor:</b> " + champObject.Armor + "<br />" +
+                    "<b>Attack Damage:</b> " + champObject.AttackDamage + "<br />" +
+                    "<b>Attack Range:</b> " + champObject.AttackRange + "<br />" +
+                    "<b>Attack Speed:</b> " + champObject.AttackSpeed + "<br />" +
+                    "<b>Crit:</b> " + champObject.Crit + "<br />" +
+                    "<b>HP:</b> " + champObject.Hp + "<br />" +
+                    "<b>HP Regen:</b> " + champObject.HpRegen + "<br />" +
+                    "<b>Movement Speed:</b> " + champObject.MovementSpeed + "<br />" +
+                    "<b>Mana:</b> " + champObject.Mana + "<br />" +
+                    "<b>Mana Regen:</b> " + champObject.ManaRegen + "<br />" +
+                    "<b>Magic Resist:</b> " + champObject.MagicResist + "<br />";
+
+        updateTotals();
+    }
+    //---------------------------------------------------------------------------------------------
+    //---------------------------------------------Add Item----------------------------------------
+    function addItem()
+    {
+        var item = document.getElementById("itemList2").value;
+
+        if (itemMap[item] != null && itemMap[item] != undefined)
+        {
+            if (numItemsEq < 6)
+            {
+                for (var k = 0; k < 6; k++)
+                {
+                    if (equippedItems[k] == null)
+                    {
+                        equippedItems[k] = item;
+                        numItemsEq += 1;
+                        k = 6;
+                        document.getElementById("itemError").innerHTML = "";
+                    }
+                }
+
+                totalGold += (items.data[itemMap[item]]).gold.total;
+
+                updateItems();
+            }
+
+            else
+            {
+                document.getElementById("itemError").innerHTML
+                    = "<b>Cannot add item.. Already have 6 items... Remove an item to add another...</b>";
+            }
+        }
+
+        else
+        {
+            document.getElementById("itemError").innerHTML = "<b>Please enter a valid item name...</b>";
+        }
+    }
+    //---------------------------------------------------------------------------------------------
+
+    //--------------------------------------------Remove Item--------------------------------------
+    function removeItem()
+    {
+        if (numItemsEq > 0)
+        {
+            var k;
+            var item = document.getElementById("itemList2").value;
+
+            for(k = 0; k < 6; k++)
+            {
+                if(equippedItems[k] == document.getElementById("itemList2").value)
+                {
+                    equippedItems[k] = null;
+                    numItemsEq -= 1;
+                    k = 7;
+                    document.getElementById("itemError").innerHTML = "";
+                    totalGold -= (items.data[itemMap[item]]).gold.total;
+                    updateItems();
+                }
+            }
+
+            if(k == 6)
+            {
+                document.getElementById("itemError").innerHTML
+                    = "<b>Cannot remove item..Requested item to remove is not equipped...</b>";
+            }
+        }
+
+        else
+        {
+            document.getElementById("itemError").innerHTML
+                = "<b>Cannot remove item... No items are equipped...</b>";
+        }
+    }
+    //---------------------------------------------------------------------------------------------
+    //------------------------------------------Remove All-----------------------------------------
+    function removeAll()
+    {
+        if (numItemsEq > 0)
+        {
+            for (var k = 0; k < 6; k++)
+            {
+                equippedItems[k] = null;
+            }
+
+            numItemsEq = 0;
+
+            document.getElementById("itemError").innerHTML = "";
+
+            totalGold = 0;
+
+            updateItems();
+        }
+
+        else {
+            document.getElementById("itemError").innerHTML
+                = "<b>Cannot remove items... No items are equipped...</b>";
+        }
+    }
+    //---------------------------------------------------------------------------------------------
+    //---------------------------------------Update Item Display-----------------------------------
+    function updateItems()
+    {
+        document.getElementById("itemDisplay").innerHTML = "";
+
+        for (var k = 0; k < 6; k++)
+        {
+            if (equippedItems[k] != null)
+            {
+                document.getElementById("itemDisplay").innerHTML
+                    = document.getElementById("itemDisplay").innerHTML + equippedItems[k] + "<br />";
+            }
+
+        }
+
+        document.getElementById("totalGoldTag").innerHTML = "<b>Total Gold Cost: </b>" + totalGold + "<br />";
+
+        updateTotals();
+    }
+    //---------------------------------------------------------------------------------------------
+    //------------------------------------------Update Totals--------------------------------------
+    function updateTotals()
+    {
+        totalObject.Armor = champObject.Armor;
+        totalObject.AttackDamage = champObject.AttackDamage;
+        totalObject.AttackRange = champObject.AttackRange;
+        totalObject.AttackSpeed = champObject.AttackSpeed;
+        totalObject.Crit = champObject.Crit;
+        totalObject.Hp = champObject.Hp;
+        totalObject.HpRegen = champObject.HpRegen;
+        totalObject.MovementSpeed = champObject.MovementSpeed;
+        totalObject.Mana = champObject.Mana;
+        totalObject.ManaRegen = champObject.ManaRegen;
+        totalObject.MagicResist = champObject.MagicResist;
+        totalObject.AbilityPower = 0;
+
+        for (var k = 0; k < 6; k++)
+        {
+            if(equippedItems[k] != null)
+            {
+                var item = itemMap[equippedItems[k]];
+                item = items.data[item].stats;
+
+                if (item.FlatArmorMod != undefined) {
+                    totalObject.Armor += item.FlatArmorMod;
+                }
+                if (item.FlatPhysicalDamageMod != undefined) {
+                    totalObject.AttackDamage += item.FlatPhysicalDamageMod;
+                }
+                if (item.FlatAttackSpeedMod != undefined) {
+                    totalObject.AttackSpeed += item.FlatAttackSpeedMod;
+                }
+                if (item.FlatCritDamageMod != undefined) {
+                    totalObject.Crit += item.FlatCritDamageMod;
+                }
+                if (item.FlatHPPoolMod != undefined) {
+                    totalObject.Hp += item.FlatHPPoolMod;
+                }
+                if (item.FlatHPRegenMod != undefined) {
+                    totalObject.HpRegen += item.FlatHPRegenMod;
+                }
+                if (item.FlatMovementSpeedMod != undefined) {
+                    totalObject.MovementSpeed += item.FlatMovementSpeedMod;
+                }
+                if (item.FlatMPPoolMod != undefined) {
+                    totalObject.Mana += item.FlatMPPoolMod;
+                }
+                if (item.FlatMPRegenMod != undefined) {
+                    totalObject.ManaRegen += item.FlatMPRegenMod;
+                }
+                if (item.FlatSpellBlockMod != undefined) {
+                    totalObject.MagicResist += item.FlatSpellBlockMod;
+                }
+                if (item.FlatMagicDamageMod != undefined) {
+                    totalObject.AbilityPower += item.FlatMagicDamageMod;
+                }
+            }
+        }
+
+        totalObject.Armor = Number((totalObject.Armor).toFixed(3));
+        totalObject.AttackDamage = Number((totalObject.AttackDamage).toFixed(3));
+        totalObject.AttackSpeed = Number((totalObject.AttackSpeed).toFixed(3));
+        totalObject.Crit = Number((totalObject.Crit).toFixed(3));
+        totalObject.Hp = Number((totalObject.Hp).toFixed(3));
+        totalObject.HpRegen = Number((totalObject.HpRegen).toFixed(3));
+        totalObject.Mana = Number((totalObject.Mana).toFixed(3));
+        totalObject.ManaRegen = Number((totalObject.ManaRegen).toFixed(3));
+        totalObject.MagicResist = Number((totalObject.MagicResist).toFixed(3));
+        totalObject.AbilityPower = Number((totalObject.AbilityPower).toFixed(3));
+
+        document.getElementById("totalsDisplay").innerHTML =
+                    "<b>Armor:</b> " + totalObject.Armor + "<br />" +
+                    "<b>Attack Damage:</b> " + totalObject.AttackDamage + "<br />" +
+                    "<b>Attack Range:</b> " + totalObject.AttackRange + "<br />" +
+                    "<b>Attack Speed:</b> " + totalObject.AttackSpeed + "<br />" +
+                    "<b>Crit:</b> " + totalObject.Crit + "<br />" +
+                    "<b>HP:</b> " + totalObject.Hp + "<br />" +
+                    "<b>HP Regen:</b> " + totalObject.HpRegen + "<br />" +
+                    "<b>Movement Speed:</b> " + totalObject.MovementSpeed + "<br />" +
+                    "<b>Mana:</b> " + totalObject.Mana + "<br />" +
+                    "<b>Mana Regen:</b> " + totalObject.ManaRegen + "<br />" +
+                    "<b>Magic Resist:</b> " + totalObject.MagicResist + "<br />" +
+                    "<b>Ability Power:</b> " + totalObject.AbilityPower + "<br />";
+    }
+    //---------------------------------------------------------------------------------------------
+</script>
